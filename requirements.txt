@@ -1,0 +1,8 @@
+streamlit
+boto3
+langdetect
+keybert
+sentence-transformers
+scikit-learn
+numpy
+torch
