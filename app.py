@@ -3,6 +3,25 @@ import boto3
 from botocore.exceptions import ClientError, NoCredentialsError
 import re
 
+# Language code to full name mapping
+LANGUAGE_MAP = {
+    'en': 'ENGLISH',
+    'es': 'SPANISH',
+    'sw': 'SWAHILI',
+    'fr': 'FRENCH',
+    'de': 'GERMAN',
+    'it': 'ITALIAN',
+    'pt': 'PORTUGUESE',
+    'ja': 'JAPANESE',
+    'ko': 'KOREAN',
+    'hi': 'HINDI',
+    'ar': 'ARABIC',
+    'zh': 'CHINESE',
+    'zh-TW': 'CHINESE_TAIWAN',
+    'tl': 'TAGALOG',
+    'unknown': 'UNKNOWN'
+}
+
 # Mock functions for testing without AWS credentials
 def mock_detect_language(text):
     """Mock language detection based on simple heuristics, including Swahili."""
@@ -10,13 +29,13 @@ def mock_detect_language(text):
         return {"error": "Text is empty or exceeds 5,000 bytes."}
     text_lower = text.lower()
     if any(word in text_lower for word in ['hello', 'world', 'love', 'is']):
-        return {"language": "en", "confidence": 0.95}
+        return {"language": LANGUAGE_MAP['en'], "confidence": 0.95}
     elif any(word in text_lower for word in ['hola', 'mundo', 'gusta']):
-        return {"language": "es", "confidence": 0.90}
+        return {"language": LANGUAGE_MAP['es'], "confidence": 0.90}
     elif any(word in text_lower for word in ['habari', 'mambo', 'napenda', 'safari', 'jambo']):
-        return {"language": "sw", "confidence": 0.90}
+        return {"language": LANGUAGE_MAP['sw'], "confidence": 0.90}
     else:
-        return {"language": "unknown", "confidence": 0.80}
+        return {"language": LANGUAGE_MAP['unknown'], "confidence": 0.80}
 
 def mock_extract_key_phrases(text, language_code='en'):
     """Mock key phrase extraction by extracting noun-like phrases."""
@@ -44,7 +63,7 @@ def detect_language(text):
             if lang_code == 'tl' and any(word in text_lower for word in swahili_keywords):
                 lang_code = 'sw'
                 confidence = min(confidence, 0.90)  # Adjust confidence for correction
-            return {"language": lang_code, "confidence": confidence}
+            return {"language": LANGUAGE_MAP.get(lang_code, LANGUAGE_MAP['unknown']), "confidence": confidence}
         return {"error": "No language detected."}
     except NoCredentialsError:
         return {"error": "AWS credentials not configured. Please run 'aws configure'."}
@@ -231,7 +250,7 @@ if analyze:
             else:
                 st.markdown('<div class="result-card">', unsafe_allow_html=True)
                 st.markdown("### 🗣️ Language Detection")
-                st.markdown(f"<span class='icon'>🌐</span><b>Detected Language:</b> {lang_result['language'].upper()}<br>"
+                st.markdown(f"<span class='icon'>🌐</span><b>Detected Language:</b> {lang_result['language']}<br>"
                             f"<span class='icon'>📊</span><b>Confidence Score:</b> {lang_result['confidence']}", unsafe_allow_html=True)
                 st.markdown('</div>', unsafe_allow_html=True)
 
