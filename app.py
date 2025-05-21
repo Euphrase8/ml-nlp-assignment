@@ -3,7 +3,6 @@ import boto3
 from botocore.exceptions import ClientError, NoCredentialsError
 import re
 
-# Language code to full name mapping
 LANGUAGE_MAP = {
     'en': 'ENGLISH',
     'es': 'SPANISH',
