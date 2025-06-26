@@ -21,7 +21,6 @@ LANGUAGE_MAP = {
     'unknown': 'UNKNOWN'
 }
 
-# Mock functions for testing without AWS credentials
 def mock_detect_language(text):
     """Mock language detection based on simple heuristics, including Swahili."""
     if not text or len(text.encode('utf-8')) > 5000:
@@ -44,7 +43,6 @@ def mock_extract_key_phrases(text, language_code='en'):
     key_phrases = [{"phrase": phrase, "confidence": 0.85} for phrase in phrases[:3] if len(phrase) > 2]
     return {"key_phrases": key_phrases} if key_phrases else {"error": "No key phrases detected."}
 
-# AWS Comprehend functions
 def detect_language(text):
     """Detect language using AWS Comprehend, with Swahili correction."""
     try:
@@ -56,12 +54,11 @@ def detect_language(text):
         if languages:
             lang_code = languages[0]['LanguageCode']
             confidence = round(languages[0]['Score'], 4)
-            # Correct TL to SW if Swahili keywords are present
             text_lower = text.lower()
             swahili_keywords = ['habari', 'mambo', 'napenda', 'safari', 'jambo']
             if lang_code == 'tl' and any(word in text_lower for word in swahili_keywords):
                 lang_code = 'sw'
-                confidence = min(confidence, 0.90)  # Adjust confidence for correction
+                confidence = min(confidence, 0.90)  
             return {"language": LANGUAGE_MAP.get(lang_code, LANGUAGE_MAP['unknown']), "confidence": confidence}
         return {"error": "No language detected."}
     except NoCredentialsError:
@@ -93,10 +90,8 @@ def extract_key_phrases(text, language_code='en'):
     except Exception as e:
         return {"error": f"Error: {e}"}
 
-# Streamlit configuration
 st.set_page_config(page_title="Comprehend NLP Analyzer", page_icon="🧠", layout="wide")
 
-# Custom CSS for bright and dark mode support
 st.markdown("""
     <style>
     :root {
@@ -210,31 +205,26 @@ st.markdown("""
     </style>
 """, unsafe_allow_html=True)
 
-# Page Title
-st.markdown('<div class="title">🌟 Comprehend NLP Analyzer</div>', unsafe_allow_html=True)
+st.markdown('<div class="title">Comprehend NLP Analyzer</div>', unsafe_allow_html=True)
 st.markdown('<div class="subtitle">Language Detection & Key Phrase Extraction for Machine Learning</div>', unsafe_allow_html=True)
 
-# Text input
 with st.container():
-    text_input = st.text_area("✍️ Enter your text here (max 5,000 bytes):", height=200, placeholder="Type or paste your text...")
+    text_input = st.text_area("Enter your text here (max 5,000 bytes):", height=200, placeholder="Type or paste your text...")
 
-# Buttons
 col1, col2 = st.columns([1, 1])
 with col1:
-    analyze = st.button("🚀 Analyze Text")
+    analyze = st.button("Analyze Text")
 with col2:
-    reset = st.button("🔄 Reset")
+    reset = st.button("Reset")
 
 if reset:
     st.rerun()
 
-# Analysis process
 if analyze:
     if not text_input.strip():
         st.warning("Please enter some text to analyze.")
     else:
         with st.spinner("🔍 Analyzing your text..."):
-            # Check if AWS credentials are available
             try:
                 boto3.client('comprehend', region_name='us-east-1').list_endpoints()
                 use_aws = True
@@ -242,30 +232,27 @@ if analyze:
                 use_aws = False
                 st.warning("AWS credentials not configured. Using mock API for assignment testing. Run 'aws configure' to enable Comprehend API.")
 
-            # Language Detection
             lang_result = detect_language(text_input) if use_aws else mock_detect_language(text_input)
             if "error" in lang_result:
                 st.error(lang_result["error"])
             else:
                 st.markdown('<div class="result-card">', unsafe_allow_html=True)
                 st.markdown("### 🗣️ Language Detection")
-                st.markdown(f"<span class='icon'>🌐</span><b>Detected Language:</b> {lang_result['language']}<br>"
-                            f"<span class='icon'>📊</span><b>Confidence Score:</b> {lang_result['confidence']}", unsafe_allow_html=True)
+                st.markdown(f"<span class='icon'></span><b>Detected Language:</b> {lang_result['language']}<br>"
+                            f"<span class='icon'></span><b>Confidence Score:</b> {lang_result['confidence']}", unsafe_allow_html=True)
                 st.markdown('</div>', unsafe_allow_html=True)
 
-            # Key Phrase Extraction
             key_result = extract_key_phrases(text_input, lang_result.get('language', 'en')) if use_aws else mock_extract_key_phrases(text_input)
             if "error" in key_result:
                 st.error(key_result["error"])
             else:
                 st.markdown('<div class="result-card">', unsafe_allow_html=True)
-                st.markdown("### 🧠 Key Phrases Extracted")
+                st.markdown("### Key Phrases Extracted")
                 for kp in key_result["key_phrases"]:
-                    st.markdown(f"<span class='icon'>🔑</span><b>Phrase:</b> {kp['phrase']}<br>"
-                                f"<span class='icon'>📈</span><b>Confidence:</b> {kp['confidence']}", unsafe_allow_html=True)
+                    st.markdown(f"<span class='icon'></span><b>Phrase:</b> {kp['phrase']}<br>"
+                                f"<span class='icon'></span><b>Confidence:</b> {kp['confidence']}", unsafe_allow_html=True)
                 st.markdown('</div>', unsafe_allow_html=True)
 
-# Sidebar
 st.sidebar.markdown('<div class="sidebar-header">📚 Machine Learning Assignment</div>', unsafe_allow_html=True)
 st.sidebar.info("""
  **Purpose**: This app fulfills a machine learning assignment to implement:
